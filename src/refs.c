@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2022 Jonas Fonseca <jonas.fonseca@gmail.com>
+/* Copyright (c) 2006-2024 Jonas Fonseca <jonas.fonseca@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -73,11 +73,13 @@ refs_request(struct view *view, enum request request, struct line *line)
 	case REQ_ENTER:
 	{
 		const struct ref *ref = reference->ref;
+		struct view_column *column = get_view_column(view, VIEW_COLUMN_DATE);
+		bool use_author_date = column && column->opt.date.use_author;
 		const char *all_references_argv[] = {
 			GIT_MAIN_LOG(encoding_arg, commit_order_arg(),
 				"%(mainargs)", "",
 				refs_is_all(reference) ? "--all" : ref->id, "",
-				show_notes_arg(), log_custom_pretty_arg())
+				show_notes_arg(), log_custom_pretty_arg(use_author_date))
 		};
 		enum open_flags flags = view_is_displayed(view) ? OPEN_SPLIT : OPEN_DEFAULT;
 
@@ -173,11 +175,18 @@ static const char **refs_argv;
 static enum status_code
 refs_open(struct view *view, enum open_flags flags)
 {
+	struct view_column *column = get_view_column(view, VIEW_COLUMN_DATE);
+	bool use_author_date = column && column->opt.date.use_author;
 	const char *refs_log[] = {
-		"git", "log", encoding_arg, "--no-color", "--date=raw",
-			opt_mailmap ? "--pretty=format:%H%x00%aN <%aE> %ad%x00%s"
-				    : "--pretty=format:%H%x00%an <%ae> %ad%x00%s",
-			"--all", "--simplify-by-decoration", NULL
+		"git", "log", encoding_arg, "--no-color", "--date=raw", use_author_date
+			? opt_mailmap
+				? "--pretty=format:%H%x00%aN <%aE> %ad%x00%s"
+				: "--pretty=format:%H%x00%an <%ae> %ad%x00%s"
+			: opt_mailmap
+				? "--pretty=format:%H%x00%aN <%aE> %cd%x00%s"
+				: "--pretty=format:%H%x00%an <%ae> %cd%x00%s",
+			"--all", "--decorate-refs=", "--simplify-by-decoration",
+			NULL
 	};
 	enum status_code code;
 	const char *name = REFS_ALL_NAME;
@@ -241,12 +250,13 @@ refs_select(struct view *view, struct line *line)
 	string_copy_rev(view->env->head, reference->ref->id);
 	string_ncopy(view->env->ref, reference->ref->name, strlen(reference->ref->name));
 	ref_update_env(view->env, reference->ref, false);
+	view->env->blob[0] = 0;
 }
 
 static struct view_ops refs_ops = {
 	"reference",
 	argv_env.head,
-	VIEW_REFRESH | VIEW_SORTABLE,
+	VIEW_REFRESH | VIEW_SORTABLE | VIEW_BLAME_LIKE,
 	0,
 	refs_open,
 	refs_read,
