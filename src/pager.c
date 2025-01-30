@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2022 Jonas Fonseca <jonas.fonseca@gmail.com>
+/* Copyright (c) 2006-2025 Jonas Fonseca <jonas.fonseca@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -126,7 +126,7 @@ pager_common_read(struct view *view, const char *data, enum line_type type, stru
 
 	if (line->type == LINE_COMMIT && view_has_flags(view, VIEW_ADD_PAGER_REFS)) {
 		data += STRING_SIZE("commit ");
-		while (*data && !isalnum(*data))
+		while (*data && !isalnum((unsigned char)*data))
 			data++;
 		add_pager_refs(view, data);
 	}
@@ -142,7 +142,8 @@ pager_read(struct view *view, struct buffer *buf, bool force_stop)
 
 	if (!buf) {
 		if (!diff_done_highlight(view->private)) {
-			report("Failed run the diff-highlight program: %s", opt_diff_highlight);
+			if (!force_stop)
+				report("Failed to run the diff-highlight program: %s", opt_diff_highlight);
 			return false;
 		}
 
