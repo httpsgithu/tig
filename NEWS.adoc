@@ -1,6 +1,89 @@
 Release notes
 =============
 
+tig-2.5.12
+----------
+
+Bug fixes:
+
+ - Fix empty blame view when opened from the diff view on i586. (#1362)
+
+tig-2.5.11
+----------
+
+Incompatibilities:
+
+ - Update remote repo variables. (#1358)
+
+Bug fixes:
+
+ - Fix various issues with `diff.noprefix` and `--no-prefix`.
+ - Fix `Ctrl-C` behavior within the Readline prompt. (#1342)
+ - Fix message upon edit from diffstat without patch.
+ - Fix missing dates in the refs view.
+ - Don't report an error when diff-highlight is killed intentionally.
+ - Fix parsing of reflog designator in timestamp format.
+
+Improvements:
+
+ - Open the blob corresponding to the diff line. (#1334)
+ - Keep cursor position in the main view when toggling
+   file-filter and rev-filter.
+ - Make errors visible in views showing Git output. (#1346)
+ - Allow different colors for all references types.
+ - Enable search in sections titles. (#1043)
+ - Show committer date by default in the date column. (#294)
+ - Update utf8proc to v2.10.0, supporting Unicode 16.
+ - Only show stash, notes and prefetch in the refs view when
+   invoked with `tig refs --all`. (#1359)
+
+tig-2.5.10
+----------
+
+Bug fixes:
+
+ - Fix `stat-*` coloring file names in `tig status` instead of just
+   markers (regression in 2.5.9). (#1326)
+ - Fix keybinding with +[cmd] not triggering view refreshing. (#1324)
+ - Fix reopening the blame view from the main view.
+ - Fix editing when stdin is redirected. (#1330)
+ - Fix compilation warnings with ncurses 6.5.
+ - Make `Ctrl-C` to kill only the command running in the foreground. (#1331)
+
+tig-2.5.9
+---------
+
+Improvements:
+
+ - Update utf8proc to v2.9.0, supporting Unicode 15.1.
+ - Also use lightweight tags in the Refs line of the diff view. (#1235)
+ - Support %(text) in all views with a text column. (#1275)
+ - Use HTTPS for GitHub clone URLs. (#1310)
+ - Move default log view options to tigrc.
+ - Allow to go to stage view without Enter. (#1284)
+ - Add new "prefetch" reference type for refs created by `git maintenance`
+   (hidden in default config). (#1318)
+ - Show the selected commit in the blame view title window.
+ - Improve the blob view experience.
+ - Clear keybinding from all keymaps (unbind) with `bind generic <key> none`.
+
+Bug fixes:
+
+ - Fix "dangling pointer" warning. (#1268)
+ - Don't use array size in function arguments. (#1269)
+ - Fix rpmbuild -ta. (#1276)
+ - Initialise struct timezone. (#1291)
+ - Fix NULL dereference at startup. (#1293)
+ - Enforce a blank before view scroll percentage.
+ - Fix refresh-mode periodic not updating branch labels. (#1270)
+ - Fix display non-ascii character. (#1299)
+ - Fix readline echo when stdin is redirected. (#1229)
+ - Fix tig blame --reverse. (#1300)
+ - Fix status view lockup.
+ - Fix untracked changes and chunk staging behaviour in plain stage view.
+ - Reset state variables when selecting a commit with no reference.
+ - Fix parsing of `git ls-tree` for submodules. (#1282)
+
 tig-2.5.8
 ---------
 

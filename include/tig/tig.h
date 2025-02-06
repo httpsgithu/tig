@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2022 Jonas Fonseca <jonas.fonseca@gmail.com>
+/* Copyright (c) 2006-2025 Jonas Fonseca <jonas.fonseca@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -39,10 +39,12 @@
 #endif
 
 /* necessary on Snow Leopard to use WINDOW struct */
+#if defined(NCURSES_VERSION_PATCH) && NCURSES_VERSION_PATCH < 20110226
 #ifdef NCURSES_OPAQUE
 #undef NCURSES_OPAQUE
 #endif
 #define NCURSES_OPAQUE 0
+#endif
 
 
 #include <assert.h>
@@ -66,6 +68,10 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <termios.h>
+
+#if defined(__APPLE__)
+#include <wchar.h>
+#endif
 
 #if defined HAVE_PCRE2
 #include <pcre2posix.h>

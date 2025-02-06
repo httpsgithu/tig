@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2022 Jonas Fonseca <jonas.fonseca@gmail.com>
+/* Copyright (c) 2006-2025 Jonas Fonseca <jonas.fonseca@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -280,6 +280,7 @@ draw_filename(struct view *view, struct view_column *column, const char *filenam
 {
 	size_t width = filename ? utf8_width(filename) : 0;
 	bool trim = width >= column->width;
+	/* Note, type for filename field is independent from line->type. */
 	enum line_type type = S_ISDIR(mode) ? LINE_DIRECTORY : LINE_FILE;
 	int column_width = column->width ? column->width : width;
 
@@ -292,7 +293,7 @@ draw_filename(struct view *view, struct view_column *column, const char *filenam
 static bool
 draw_file_size(struct view *view, struct view_column *column, unsigned long size, mode_t mode)
 {
-	const char *str = S_ISDIR(mode) ? NULL : mkfilesize(size, column->opt.file_size.display);
+	const char *str = S_ISREG(mode) ? mkfilesize(size, column->opt.file_size.display) : NULL;
 
 	if (!column->width || column->opt.file_size.display == FILE_SIZE_NO)
 		return false;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2022 Jonas Fonseca <jonas.fonseca@gmail.com>
+/* Copyright (c) 2006-2025 Jonas Fonseca <jonas.fonseca@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -20,6 +20,10 @@
 #include "tig/draw.h"
 #include "tig/display.h"
 #include "tig/watch.h"
+
+#ifdef HAVE_READLINE
+#include <readline/readline.h>
+#endif /* HAVE_READLINE */
 
 #define MAX_KEYS 2000
 
@@ -69,25 +73,23 @@ open_external_viewer(const char *argv[], const char *dir, bool silent, bool conf
 	bool ok;
 
 	if (echo) {
+		struct io io;
 		char buf[SIZEOF_STR] = "";
 
-		io_run_buf(argv, buf, sizeof(buf), dir, false);
-		if (*buf) {
+		ok = io_exec(&io, IO_RD, dir, NULL, argv, IO_RD_WITH_STDERR) && io_read_buf(&io, buf, sizeof(buf), true);
+		if (*buf)
 			report("%s", buf);
-			return true;
-		} else {
-			report("No output");
-			return false;
-		}
+
 	} else if (silent || is_script_executing()) {
 		ok = io_run_bg(argv, dir);
 
 	} else {
+		signal(SIGINT, SIG_IGN);
 		clear();
 		refresh();
 		endwin();                  /* restore original tty modes */
 		tcsetattr(opt_tty.fd, TCSAFLUSH, opt_tty.attr);
-		ok = io_run_fg(argv, dir);
+		ok = io_run_fg(argv, dir, opt_tty.fd);
 		if (confirm || !ok) {
 			if (!ok && *notice)
 				fprintf(stderr, "%s", notice);
@@ -100,6 +102,7 @@ open_external_viewer(const char *argv[], const char *dir, bool silent, bool conf
 		fseek(opt_tty.file, 0, SEEK_END);
 		tcsetattr(opt_tty.fd, TCSAFLUSH, opt_tty.attr);
 		set_terminal_modes();
+		signal(SIGINT, SIG_DFL);
 	}
 
 	if (watch_update(WATCH_EVENT_AFTER_COMMAND) && do_refresh) {
@@ -608,6 +611,9 @@ init_tty(void)
 	if (!opt_tty.file)
 		die("Failed to open tty for input");
 	opt_tty.fd = fileno(opt_tty.file);
+#ifdef HAVE_READLINE
+	rl_instream = opt_tty.file;
+#endif /* HAVE_READLINE */
 
 	/* attributes */
 	opt_tty.attr = calloc(1, sizeof(struct termios));
@@ -771,6 +777,7 @@ get_input(int prompt_position, struct key *key)
 		int delay = -1;
 
 		if (opt_refresh_mode != REFRESH_MODE_MANUAL) {
+			bool refs_refreshed = false;
 
 			if (opt_refresh_mode == REFRESH_MODE_PERIODIC)
 				delay = watch_periodic(opt_refresh_interval);
@@ -778,6 +785,10 @@ get_input(int prompt_position, struct key *key)
 			foreach_displayed_view (view, i) {
 				if (view_can_refresh(view) &&
 					watch_dirty(&view->watch)) {
+					if (!refs_refreshed) {
+						load_refs(true);
+						refs_refreshed = true;
+					}
 					refresh_view(view);
 				}
 			}
